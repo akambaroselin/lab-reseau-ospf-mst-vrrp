@@ -32,11 +32,11 @@
 
 ## Présentation
 
-Ce projet a été donné en cours aux étudiants de 3e année Cybersécurité et Investigation Numérique de l'École Nationale Supérieure Polytechnique de Yaoundé (ENSPY). Il simule l'infrastructure réseau d'un site d'entreprise composé d'un fournisseur d'accès, de deux routeurs de distribution, d'une paire de switchs d'agrégation de niveau 3 et de deux switchs d'accès. Il couvre les compétences CCNA2 et CCNA3 : OSPF mono-aire, routage inter-VLAN par SVI, VRRP, EtherChannel PAgP et LACP, MST, VTP, relais DHCP et NAT avec surcharge.
+Ce projet a été donné en cours aux étudiants de 3e année Cybersécurité et Investigation Numérique de l'École Nationale Supérieure Polytechnique de Yaoundé (ENSPY). Il simule l'infrastructure réseau d'un site d'entreprise composé d'un fournisseur d'accès, de deux routeurs de cœur, d'une paire de switchs de distribution de niveau 3 et de deux switchs d'accès. Il couvre les compétences CCNA2 et CCNA3 : OSPF mono-aire, routage inter-VLAN par SVI, VRRP, EtherChannel PAgP et LACP, MST, VTP, relais DHCP et NAT avec surcharge.
 
 ### Situation
 
-À l'ENSPY, la filière AHN (Arts et Humanités Numériques) du génie informatique regroupe spécialités, dont HN, AN, CIN et ICD. Leurs salles et leurs postes sont reliés au même réseau, qui dépendait d'un seul routeur, d'un seul switch central et d'un seul lien vers Internet. Un lundi matin, le switch central tombe en panne : les quatre filières perdent à la fois le réseau local, l'accès à Internet et les ressources partagées. La coupure dure plusieurs heures, les cours et les travaux pratiques s'arrêtent.
+À l'ENSPY, la grande filière AHN (Arts et Humanités Numériques) du génie informatique regroupe plusieurs filières, dont HN, AN, CIN et ICD. Leurs salles et leurs postes sont reliés au même réseau, qui dépendait d'un seul routeur, d'un seul switch central et d'un seul lien vers Internet. Un lundi matin, le switch central tombe en panne : les quatre filières perdent à la fois le réseau local, l'accès à Internet et les ressources partagées. La coupure dure plusieurs heures, les cours et les travaux pratiques s'arrêtent.
 
 L'administration demande un réseau qui continue de fonctionner quand un équipement ou un lien tombe, qui répartit la charge entre ses équipements, qui distribue les adresses automatiquement et qui reste administrable à distance.
 
@@ -44,21 +44,21 @@ L'administration demande un réseau qui continue de fonctionner quand un équipe
 
 | Problème rencontré | Réponse de la topologie |
 |---|---|
-| Un seul lien vers Internet | Le FAI est relié à deux routeurs de distribution, RO-11 et RO-12, chacun avec son NAT |
-| Un seul switch central | Deux switchs d'agrégation, AG1 et AG2, auxquels chaque switch d'accès est relié par un EtherChannel et un trunk croisé |
+| Un seul lien vers Internet | Le FAI est relié à deux routeurs de cœur, RO-11 et RO-12, chacun avec son NAT |
+| Un seul switch central | Deux switchs de distribution, AG1 et AG2, auxquels chaque switch d'accès est relié par un EtherChannel et un trunk croisé |
 | Une seule passerelle par filière | VRRP : une adresse virtuelle `.254` par VLAN, reprise automatiquement par l'autre switch en cas de panne |
 | Un lien de niveau 2 bloqué et inutilisé | MST à deux instances : AG1 racine des VLANs 225 et 235, AG2 racine des VLANs 245 et 255 |
 | Un seul lien entre deux équipements | EtherChannel PAgP (AG-SW) et LACP (AG1-AG2) |
-| Un seul serveur DHCP | RO-11 et RO-12 avec des pools complémentaires, joints par les relais DHCP des switchs d'agrégation |
+| Un seul serveur DHCP | RO-11 et RO-12 avec des pools complémentaires, joints par les relais DHCP des switchs de distribution |
 | Routes à maintenir à la main | OSPF en aire 0, avec la route par défaut injectée par le FAI |
 | Équipements difficiles à joindre | VLAN 211 de gestion et loopbacks sur chaque équipement |
 
-Le réseau est conçu pour qu'une panne d'un switch d'agrégation, d'un routeur de distribution ou d'un lien ne coupe plus le service. La capture `Bascule_VRRP.png` le montre : AG2 est arrêté et AG1 reprend les passerelles des VLANs 245 et 255.
+Le réseau est conçu pour qu'une panne d'un switch de distribution, d'un routeur de cœur ou d'un lien ne coupe plus le service. La capture `Bascule_VRRP.png` le montre : AG2 est arrêté et AG1 reprend les passerelles des VLANs 245 et 255.
 
 ### Objectifs
 - Concevoir un plan d'adressage IP structuré avec des liens point-à-point en /30
-- Assurer la **haute disponibilité** à chaque niveau : double accès Internet, double agrégation, double passerelle par VLAN
-- Répartir la charge entre les deux switchs d'agrégation grâce à **MST** et **VRRP**
+- Assurer la **haute disponibilité** à chaque niveau : double accès Internet, double distribution, double passerelle par VLAN
+- Répartir la charge entre les deux switchs de distribution grâce à **MST** et **VRRP**
 - Distribuer les adresses par **DHCP** depuis deux serveurs complémentaires via des relais
 - Fournir un accès Internet aux VLANs internes grâce au **NAT**
 
@@ -72,9 +72,9 @@ Le réseau est organisé en quatre couches :
 
 | Couche | Équipements | Rôle |
 |---|---|---|
-| **Accès Internet** | FAI | Sortie vers Internet, NAT, injection de la route par défaut dans OSPF |
-| **Distribution** | RO-11, RO-12 | Routeurs de distribution, serveurs DHCP, NAT |
-| **Agrégation** | AG1, AG2 | Switchs L3, passerelles VRRP, racines MST, relais DHCP |
+| **Fournisseur d'accès** | FAI | Sortie vers Internet, NAT, injection de la route par défaut dans OSPF |
+| **Cœur** | RO-11, RO-12 | Routeurs de cœur, serveurs DHCP, NAT |
+| **Distribution** | AG1, AG2 | Switchs L3, passerelles VRRP, racines MST, relais DHCP |
 | **Accès** | SW1, SW2 | Switchs L2, ports utilisateurs, clients VTP |
 
 ---
@@ -144,7 +144,7 @@ Le DNS distribué est `8.8.8.8`.
 | **EtherChannel LACP** | Port-channel 20 (e0/0-1) entre AG1 et AG2, lien routé en `192.168.10.8/30` |
 | **EtherChannel PAgP** | Port-channel 19 entre AG1 et SW1, Port-channel 21 entre AG2 et SW2 (e0/2-3, trunks 802.1q) |
 | **Trunks croisés** | AG1 e1/3 ↔ SW2 e1/3 et AG2 e1/3 ↔ SW1 e1/3 pour la double connexion des switchs d'accès |
-| **OSPF multi-chemins** | Chaque switch d'agrégation est relié aux deux routeurs de distribution, chaque routeur à FAI |
+| **OSPF multi-chemins** | Chaque switch de distribution est relié aux deux routeurs de cœur, chaque routeur à FAI |
 
 ### Services réseau
 
@@ -163,10 +163,10 @@ Le DNS distribué est `8.8.8.8`.
 | Équipement | Rôle | Points clés |
 |---|---|---|
 | **FAI** | Fournisseur d'accès simulé | NAT overload sur e0/2, OSPF, route par défaut injectée |
-| **RO-11** | Routeur de distribution | Serveur DHCP (moitié basse), NAT, OSPF |
-| **RO-12** | Routeur de distribution | Serveur DHCP (moitié haute), NAT, OSPF |
-| **AG1** | Agrégation L3 | VTP server, racine MST 0 et 1, VRRP maître 225/235, Po19 PAgP, Po20 LACP |
-| **AG2** | Agrégation L3 | VTP server, racine MST 2, VRRP maître 245/255, Po21 PAgP, Po20 LACP |
+| **RO-11** | Routeur de cœur | Serveur DHCP (moitié basse), NAT, OSPF |
+| **RO-12** | Routeur de cœur | Serveur DHCP (moitié haute), NAT, OSPF |
+| **AG1** | Distribution L3 | VTP server, racine MST 0 et 1, VRRP maître 225/235, Po19 PAgP, Po20 LACP |
+| **AG2** | Distribution L3 | VTP server, racine MST 2, VRRP maître 245/255, Po21 PAgP, Po20 LACP |
 | **SW1** | Accès L2 | VTP client, PC17 (VLAN 225), PC18 (VLAN 235), Po19 PAgP |
 | **SW2** | Accès L2 | VTP client, VPC (VLAN 245), PC2 (VLAN 255), Po21 PAgP |
 
