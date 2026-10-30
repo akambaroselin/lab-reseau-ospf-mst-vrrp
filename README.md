@@ -32,7 +32,7 @@
 
 ## Présentation
 
-Ce projet a été donné en cours aux étudiants de 3e année Cybersécurité et Investigation Numérique de l'École Nationale Supérieure Polytechnique de Yaoundé (ENSPY). Il simule l'infrastructure réseau d'un site d'entreprise composé d'un fournisseur d'accès, de deux routeurs de cœur, d'une paire de switchs de distribution de niveau 3 et de deux switchs d'accès. Il couvre les compétences CCNA2 et CCNA3 : OSPF mono-aire, routage inter-VLAN par SVI, VRRP, EtherChannel PAgP et LACP, MST, VTP, relais DHCP et NAT avec surcharge.
+Ce TP a été donné en cours aux étudiants de 3e année Cybersécurité et Investigation Numérique de l'École Nationale Supérieure Polytechnique de Yaoundé (ENSPY). Il simule l'infrastructure réseau d'un site d'entreprise composé d'un fournisseur d'accès, de deux routeurs de cœur, d'une paire de switchs de distribution de niveau 3 et de deux switchs d'accès. Il couvre les compétences CCNA2 et CCNA3 : OSPF mono-aire, routage inter-VLAN par SVI, VRRP, EtherChannel PAgP et LACP, MST, VTP, relais DHCP et NAT avec surcharge.
 
 ### Situation
 
