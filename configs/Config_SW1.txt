@@ -1,0 +1,66 @@
+en
+conf t
+hostname SW1
+no ip domain lookup
+line con 0
+ logging synchronous
+ exec-timeout 0 0
+!
+vtp domain ENSPY
+vtp version 2
+vtp mode client
+!
+spanning-tree mode mst
+spanning-tree mst configuration
+ name ENSPY
+ revision 1
+ instance 1 vlan 225,235
+ instance 2 vlan 245,255
+exit
+!
+! --- PAgP 19 vers AG1 ---
+interface range Ethernet0/2 - 3
+ description PAGP VERS AG1
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235
+ channel-protocol pagp
+ channel-group 19 mode desirable
+ no shutdown
+!
+interface Port-channel19
+ description PAGP19 VERS AG1
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235
+!
+! --- Trunk vers AG2 ---
+interface Ethernet1/3
+ description TRUNK VERS AG2 e1/3
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235,245,255
+ no shutdown
+!
+! --- Acces ---
+interface Ethernet1/0
+ description PC17 VLAN225 HN
+ switchport mode access
+ switchport access vlan 225
+ spanning-tree portfast
+ no shutdown
+!
+interface Ethernet1/1
+ description PC18 VLAN235 AN
+ switchport mode access
+ switchport access vlan 235
+ spanning-tree portfast
+ no shutdown
+!
+interface Vlan211
+ description MGMT
+ ip address 192.168.211.7 255.255.255.0
+ no shutdown
+!
+end
+write memory

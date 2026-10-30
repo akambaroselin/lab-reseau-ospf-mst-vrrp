@@ -1,0 +1,77 @@
+en
+conf t
+hostname RO-12
+no ip domain lookup
+line con 0
+ logging synchronous
+ exec-timeout 0 0
+!
+interface Loopback0
+ ip address 2.2.2.3 255.255.255.255
+!
+interface Loopback1
+ description MGMT
+ ip address 192.168.211.3 255.255.255.255
+!
+interface Ethernet0/0
+ description VERS AG2 e1/0
+ ip address 192.168.10.6 255.255.255.252
+ ip nat inside
+ no shutdown
+!
+interface Ethernet0/1
+ description VERS FAI
+ ip address 25.40.2.1 255.255.255.0
+ ip nat outside
+ no shutdown
+!
+interface Ethernet0/2
+ description VERS AG1 e1/0
+ ip address 192.168.10.26 255.255.255.252
+ ip nat inside
+ no shutdown
+!
+! --- DHCP (moitie haute : .128 a .253) ---
+ip dhcp excluded-address 192.168.225.1 192.168.225.127
+ip dhcp excluded-address 192.168.225.254
+ip dhcp excluded-address 192.168.235.1 192.168.235.127
+ip dhcp excluded-address 192.168.235.254
+ip dhcp excluded-address 192.168.245.1 192.168.245.127
+ip dhcp excluded-address 192.168.245.254
+ip dhcp excluded-address 192.168.255.1 192.168.255.127
+ip dhcp excluded-address 192.168.255.254
+!
+ip dhcp pool VLAN225-HN
+ network 192.168.225.0 255.255.255.0
+ default-router 192.168.225.254
+ dns-server 8.8.8.8
+!
+ip dhcp pool VLAN235-AN
+ network 192.168.235.0 255.255.255.0
+ default-router 192.168.235.254
+ dns-server 8.8.8.8
+!
+ip dhcp pool VLAN245-CIN
+ network 192.168.245.0 255.255.255.0
+ default-router 192.168.245.254
+ dns-server 8.8.8.8
+!
+ip dhcp pool VLAN255-ICD
+ network 192.168.255.0 255.255.255.0
+ default-router 192.168.255.254
+ dns-server 8.8.8.8
+!
+! --- NAT ---
+access-list 1 permit 192.168.0.0 0.0.255.255
+ip nat inside source list 1 interface Ethernet0/1 overload
+!
+router ospf 1
+ router-id 2.2.2.3
+ network 2.2.2.3 0.0.0.0 area 0
+ network 192.168.211.3 0.0.0.0 area 0
+ network 192.168.10.4 0.0.0.3 area 0
+ network 192.168.10.24 0.0.0.3 area 0
+ network 25.40.2.0 0.0.0.255 area 0
+!
+end
+write memory

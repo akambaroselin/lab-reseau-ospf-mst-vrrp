@@ -1,0 +1,157 @@
+en
+conf t
+hostname AG1
+no ip domain lookup
+ip routing
+line con 0
+ logging synchronous
+ exec-timeout 0 0
+!
+! --- VTP / VLANs ---
+vtp domain ENSPY
+vtp version 2
+vtp mode server
+!
+vlan 200
+ name NATIF
+vlan 211
+ name MGMT
+vlan 212
+ name PARC
+vlan 225
+ name HN
+vlan 235
+ name AN
+vlan 245
+ name CIN
+vlan 255
+ name ICD
+!
+! --- MST ---
+spanning-tree mode mst
+spanning-tree mst configuration
+ name ENSPY
+ revision 1
+ instance 1 vlan 225,235
+ instance 2 vlan 245,255
+exit
+spanning-tree mst 0-1 priority 4096
+spanning-tree mst 2 priority 8192
+!
+interface Loopback0
+ ip address 2.2.2.4 255.255.255.255
+!
+! --- Liens routes vers RO ---
+interface Ethernet1/1
+ description VERS RO-11 e0/0
+ no switchport
+ ip address 192.168.10.17 255.255.255.252
+ no shutdown
+!
+interface Ethernet1/0
+ description VERS RO-12 e0/2
+ no switchport
+ ip address 192.168.10.25 255.255.255.252
+ no shutdown
+!
+! --- LACP 20 vers AG2 (L3) ---
+interface range Ethernet0/0 - 1
+ description LACP VERS AG2
+ no switchport
+ channel-protocol lacp
+ channel-group 20 mode active
+ no shutdown
+!
+interface Port-channel20
+ description LACP20 VERS AG2
+ no switchport
+ ip address 192.168.10.9 255.255.255.252
+!
+! --- PAgP 19 vers SW1 (trunk) ---
+interface range Ethernet0/2 - 3
+ description PAGP VERS SW1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235
+ channel-protocol pagp
+ channel-group 19 mode desirable
+ no shutdown
+!
+interface Port-channel19
+ description PAGP19 VERS SW1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235
+!
+! --- Trunk vers SW2 ---
+interface Ethernet1/3
+ description TRUNK VERS SW2 e1/3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 200,211,225,235,245,255
+ no shutdown
+!
+! --- SVI + Relais DHCP + VRRP ---
+interface Vlan211
+ description MGMT
+ ip address 192.168.211.4 255.255.255.0
+ no shutdown
+!
+interface Vlan225
+ description HN
+ ip address 192.168.225.1 255.255.255.0
+ ip helper-address 2.2.2.2
+ ip helper-address 2.2.2.3
+ vrrp 225 ip 192.168.225.254
+ vrrp 225 priority 150
+ no shutdown
+!
+interface Vlan235
+ description AN
+ ip address 192.168.235.1 255.255.255.0
+ ip helper-address 2.2.2.2
+ ip helper-address 2.2.2.3
+ vrrp 235 ip 192.168.235.254
+ vrrp 235 priority 150
+ no shutdown
+!
+interface Vlan245
+ description CIN
+ ip address 192.168.245.1 255.255.255.0
+ ip helper-address 2.2.2.2
+ ip helper-address 2.2.2.3
+ vrrp 245 ip 192.168.245.254
+ vrrp 245 priority 100
+ no shutdown
+!
+interface Vlan255
+ description ICD
+ ip address 192.168.255.1 255.255.255.0
+ ip helper-address 2.2.2.2
+ ip helper-address 2.2.2.3
+ vrrp 255 ip 192.168.255.254
+ vrrp 255 priority 100
+ no shutdown
+!
+router ospf 1
+ router-id 2.2.2.4
+ passive-interface Vlan211
+ passive-interface Vlan225
+ passive-interface Vlan235
+ passive-interface Vlan245
+ passive-interface Vlan255
+ network 2.2.2.4 0.0.0.0 area 0
+ network 192.168.10.16 0.0.0.3 area 0
+ network 192.168.10.24 0.0.0.3 area 0
+ network 192.168.10.8 0.0.0.3 area 0
+ network 192.168.211.0 0.0.0.255 area 0
+ network 192.168.225.0 0.0.0.255 area 0
+ network 192.168.235.0 0.0.0.255 area 0
+ network 192.168.245.0 0.0.0.255 area 0
+ network 192.168.255.0 0.0.0.255 area 0
+!
+end
+write memory
